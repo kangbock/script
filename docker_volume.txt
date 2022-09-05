@@ -1,0 +1,16 @@
+#! /bin/bash
+# volume 형식
+docker volume create web
+cat > /var/lib/docker/volumes/web/_data/index.html << EOF
+<html><body><h1>WEBSERVER</h1></body></html>
+EOF
+docker run -itd -v web:/usr/local/apache2/htdocs/ -p 61000:80 --name h1 httpd
+docker run -itd -v web:/usr/share/nginx/html/ -p 62000:80 --name n1 nginx
+
+# bind mount 형식
+mkdir /vol
+cat > /vol/index.html << EOF
+<html><body><h1>WEBSERVER</h1></body></html>
+EOF
+docker run -itd -v /vol:/usr/local/apache2/htdocs/ -p 63000:80 --name h2 httpd
+docker run -itd -v /vol:/usr/share/nginx/html/ -p 64000:80 --name n2 nginx

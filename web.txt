@@ -1,0 +1,46 @@
+Host		CenTOS7-WEB		CenTOS7-DB		W11-1	
+IP		10.0.0.11		10.0.0.12		10.0.0.101
+SM				255.255.255.0
+DG				10.0.0.254
+DNS				10.0.0.1, 8.8.8.8
+
+CPU		1P1C			1P1C			1P1C
+MEM		1024			1024			1024
+HDD		50			50			50
+NIC		NAT			NAT			NAT
+
+Roles		WEB			MySql-Server		Tester
+		php(index.html, *.php)
+		php-mysql	
+		MySql-Client
+
+[MySql-Client, PHP, http]
+
+#! /bin/bash
+sudo su -
+yum install -y wget httpd
+amazon-linux-extras enable php7.2
+amazon-linux-extras enable lamp-mariadb10.2-php7.2
+yum clean metadata
+yum install -y php-cli php-pdo php-fpm php-json php-mysqlnd mariadb
+yum install -y httpd
+
+yum -y install http://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm
+sed -i 's/gpgcheck=1/gpgcheck=0/g' /etc/yum.repos.d/mysql-community.repo
+yum install -y mysql-community-client
+
+sed -i 's/DirectoryIndex index.html/DirectoryIndex index.php/g' /etc/httpd/conf/httpd.conf
+systemctl restart httpd
+
+sed -i '
+
+
+[MySql-Server]
+
+#! /bin/bash
+sudo su -
+yum -y install http://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm
+sed -i 's/gpgcheck=1/gpgcheck=0/g' /etc/yum.repos.d/mysql-community.repo
+yum install -y mysql-community-server
+firewall-cmd --permanent --add-port=3306/tcp
+firewall-cmd --reload

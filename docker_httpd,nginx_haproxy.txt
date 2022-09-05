@@ -1,0 +1,20 @@
+#! /bin/bash
+cat > index1.html <<EOF
+<html><body><h1>COPY-WEBSERVER-1</h1></body></html>
+EOF
+cat > index2.html <<EOF
+<html><body><h1>COPY-WEBSERVER-2</h1></body></html>
+EOF
+docker run -itd --name h1 httpd
+docker run -itd --name n1 nginx
+docker cp index1.html h1:/usr/local/apache2/htdocs/index.html
+docker cp index2.html n1:/usr/share/nginx/html/index.html
+yum install -y haproxy
+sed -i 's/*:5000/*:80/g' /etc/haproxy/haproxy.cfg
+sed -i 's/app1 127.0.0.1:5001/app1 172.17.0.2:80/g' /etc/haproxy/haproxy.cfg
+sed -i 's/app2 127.0.0.1:5002/app2 172.17.0.3:80/g' /etc/haproxy/haproxy.cfg
+sed -i '84 s/./#&/' /etc/haproxy/haproxy.cfg
+sed -i '85 s/./#&/' /etc/haproxy/haproxy.cfg
+systemctl start haproxy
+firewall-cmd --permanent --add-port=80/tcp
+firewall-cmd --reload

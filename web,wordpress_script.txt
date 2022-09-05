@@ -1,0 +1,41 @@
+#! /bin/bash
+# php, wordpress 설치
+sudo su -
+yum install -y wget httpd
+amazon-linux-extras enable php7.2
+amazon-linux-extras enable lamp-mariadb10.2-php7.2
+yum clean metadata
+yum install -y php-cli php-pdo php-fpm php-json php-mysqlnd mariadb
+wget https://ko.wordpress.org/latest-ko_KR.tar.gz
+tar xvfz latest-ko_KR.tar.gz
+cp -a wordpress/* /var/www/html/
+
+# DB-Client 설치
+amazon-linux-extras enable epel
+yum install -y epel-release
+yum -y install http://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm
+sed -i 's/gpgcheck=1/gpgcheck=0/g' /etc/yum.repos.d/mysql-community.repo
+yum install -y mysql-community-client
+
+# 소유권?
+chown apache.apache /var/www/html/*
+
+# wordpress 설정파일 생성
+cp /var/www/html/wp-config-sample.php /var/www/html/wp-config.php
+
+# httpd 설정
+sed -i 's/DirectoryIndex index.html/DirectoryIndex index.php/g' /etc/httpd/conf/httpd.conf
+systemctl restart httpd
+
+# wordpress 설정
+sed -i 's/database_name_here/wordpress/g' /var/www/html/wp-config.php
+sed -i 's/username_here/root/g' /var/www/html/wp-config.php
+sed -i 's/password_here/It12345!/g' /var/www/html/wp-config.php
+sed -i 's/localhost//g' /var/www/html/wp-config.php
+
+# index.php 파일이 오류 시 뜨게할 페이지
+cat > /var/www/html/index.html <<EOF
+<html><head><meta charset='utf-8'</head><body><h1>health check</h1></body></html>
+EOF
+
+systemctl restart httpd
